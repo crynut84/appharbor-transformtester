@@ -199,4 +199,7 @@
     </VisualStudio>
   </ProjectExtensions>
   <Import Project="$(SolutionDir)\.nuget\nuget.targets" />
+  <PropertyGroup>
+    <PreBuildEvent>"$(SolutionDir).nuget\nuget.exe" install "$(ProjectDir)packages.config"</PreBuildEvent>
+  </PropertyGroup>
 </Project>
