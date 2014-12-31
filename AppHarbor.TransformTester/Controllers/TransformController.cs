@@ -1,4 +1,5 @@
 ﻿using Microsoft.Web.XmlTransform;
+using System;
 using System.Text;
 using System.Web.Mvc;
 using System.Xml;
@@ -11,7 +12,7 @@ namespace AppHarbor.TransformTester.Controllers
 	{
 		[HttpPost]
 		[ValidateInput(false)]
-		public ActionResult Create(string webConfigXml, string transformXml)
+		public ActionResult Create(string webConfigXml, string transformXml, bool beautify = default(bool))
 		{
 			try
 			{
@@ -27,12 +28,15 @@ namespace AppHarbor.TransformTester.Controllers
 							var stringBuilder = new StringBuilder();
 							var xmlWriterSettings = new XmlWriterSettings();
 							xmlWriterSettings.Indent = true;
-							xmlWriterSettings.IndentChars = "    ";
+							xmlWriterSettings.IndentChars = new String(' ', 4);
 							using (var xmlTextWriter = XmlTextWriter.Create(stringBuilder, xmlWriterSettings))
 							{
 								document.WriteTo(xmlTextWriter);
 							}
-							return Content(stringBuilder.ToString(), "text/xml");
+                            string result = stringBuilder.ToString();
+                            if (beautify)
+                                result = this.Beautify(result);
+							return Content(result, "text/xml");
 						}
 						else
 						{
@@ -58,5 +62,23 @@ namespace AppHarbor.TransformTester.Controllers
 						new XElement("error", errorMessage)
 				).ToString(), "text/xml");
 		}
+
+        // http://blogs.msdn.com/b/erikaehrli/archive/2005/11/16/indentxmlfilesanddocuments.aspx
+        private string Beautify(string content)
+        {
+            XmlDocument doc = new XmlDocument();
+            doc.LoadXml(content);
+            StringBuilder sb = new StringBuilder();
+            XmlWriterSettings settings = new XmlWriterSettings();
+            settings.Indent = true;
+            settings.IndentChars = new String(' ', 4);
+            settings.NewLineChars = Environment.NewLine;
+            settings.NewLineHandling = NewLineHandling.Replace;
+            using (XmlWriter writer = XmlWriter.Create(sb, settings))
+            {
+                doc.Save(writer);
+            }
+            return sb.ToString();
+        }
 	}
 }
